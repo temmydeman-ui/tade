@@ -1,597 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Haven — Find your next home</title>
-  <meta name="description" content="A stunning, modern house listing UI in a single HTML file. Responsive, dark mode, filters, favorites, and a modal details view." />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple House Listing</title>
   <style>
-    :root {
-      --bg: #0b0c10;
-      --panel: #111218;
-      --muted: #8b91a1;
-      --text: #eef2ff;
-      --brand: #7c3aed; /* violet-600 */
-      --brand-2: #22d3ee; /* cyan-400 */
-      --ok: #22c55e;
-      --warn: #f59e0b;
-      --danger: #ef4444;
-      --radius: 18px;
-      --ring: 0 0 0 2px rgba(124,58,237,.3), 0 2px 12px rgba(124,58,237,.35);
-      --shadow-sm: 0 1px 2px rgba(0,0,0,.15);
-      --shadow-md: 0 6px 24px rgba(0,0,0,.25);
-      --shadow-lg: 0 20px 60px rgba(0,0,0,.35);
-      --card-glow: 0 0 0 1px rgba(255,255,255,.06) inset, 0 10px 40px rgba(0,0,0,.35);
-      --glass: rgba(255,255,255,.06);
-      --chip: rgba(255,255,255,.08);
-    }
-    * { box-sizing: border-box }
-    html, body { height: 100%; }
     body {
-      margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: var(--text);
-      background: radial-gradient(1200px 600px at 10% -10%, rgba(124,58,237,.18), transparent 60%),
-                  radial-gradient(900px 500px at 110% 10%, rgba(34,211,238,.14), transparent 50%),
-                  linear-gradient(180deg, #0a0b12, #0b0c10);
-      background-attachment: fixed;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
     }
-    .container { width: min(1200px, 92vw); margin-inline: auto; }
-    .flex { display: flex; }
-    .grid { display: grid; }
-    .btn { appearance:none; border:0; border-radius: calc(var(--radius) - 6px); padding: 12px 16px; font-weight: 600; cursor: pointer; background: linear-gradient(135deg, var(--brand), #5b21b6); color:white; box-shadow: var(--ring); transition: transform .08s ease, box-shadow .2s; }
-    .btn:active { transform: translateY(1px) }
-    .btn.secondary { background: rgba(255,255,255,.06); box-shadow: var(--shadow-sm); color: #e5e7eb; }
-    .btn.ghost { background: transparent; box-shadow: none; border: 1px solid rgba(255,255,255,.08); color: #e5e7eb; }
-    .tag { padding: 6px 10px; border-radius: 999px; background: var(--chip); color: #e6e6f7; font-weight: 600; font-size: 12px; display:inline-flex; gap:8px; align-items:center }
-    .pill { padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.03); }
-    .muted { color: var(--muted) }
-
-    /* Navbar */
-    .nav { position: sticky; top: 0; z-index: 50; background: rgba(10,11,18,.65); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,.06); }
-    .nav-inner { display:flex; align-items:center; gap: 14px; padding: 14px 0; }
-    .brand { display:flex; align-items:center; gap: 12px; font-weight: 800; letter-spacing:.2px; }
-    .logo { width: 36px; height: 36px; border-radius: 12px; background: conic-gradient(from 180deg at 50% 50%, var(--brand), var(--brand-2), var(--brand)); box-shadow: 0 8px 24px rgba(124,58,237,.45); }
-    .nav-search { flex: 1; display:flex; gap:10px; }
-    .field { position: relative; flex:1 }
-    .field input, .field select { width: 100%; height: 44px; background: rgba(255,255,255,.06); color: var(--text); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 0 14px 0 42px; outline:none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); }
-    .field select{ padding-left: 14px }
-    .field input::placeholder { color: #9aa1b3 }
-    .field .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity:.7 }
-    .nav-actions { display:flex; align-items:center; gap:10px }
-
-    /* Hero */
-    .hero { padding: 38px 0 22px; }
-    .hero h1 { font-size: clamp(28px, 3.4vw, 44px); line-height: 1.04; margin:0 0 10px; letter-spacing: -0.02em; }
-    .hero p { margin:0; color: #c7cbe0 }
-
-    /* Filters row */
-    .filters { margin: 16px 0 6px; display:flex; flex-wrap: wrap; gap: 10px; align-items:center }
-
-    /* Listings grid */
-    .listings { display:grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 14px 0 40px; }
-    @media (max-width: 980px){ .listings{ grid-template-columns: repeat(2, 1fr);} }
-    @media (max-width: 640px){ .nav-inner{flex-wrap:wrap} .nav-search{ order:3; width:100% } .listings{ grid-template-columns: 1fr;} }
-
-    .card { position:relative; overflow:hidden; border-radius: var(--radius); background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04)); box-shadow: var(--card-glow); border: 1px solid rgba(255,255,255,.08); transition: transform .2s ease, box-shadow .2s ease; }
-    .card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-    .media { position:relative; height: 220px; background: linear-gradient(135deg, rgba(124,58,237,.35), rgba(34,211,238,.25)); }
-    .media .img { position:absolute; inset:0; background: radial-gradient(800px 300px at 20% 20%, rgba(124,58,237,.45), transparent 60%), radial-gradient(600px 300px at 80% 30%, rgba(34,211,238,.35), transparent 55%), linear-gradient(180deg, #191a23, #12131a); }
-    .badge { position:absolute; left:12px; top:12px }
-    .fav { position:absolute; right:12px; top:12px; width:36px; height:36px; border-radius: 999px; background: rgba(0,0,0,.35); display:grid; place-items:center; border:1px solid rgba(255,255,255,.18); cursor:pointer; }
-    .fav svg { width:20px; height:20px; fill: none; stroke:white; stroke-width:2 }
-    .fav.active { background: rgba(124,58,237,.25); }
-    .fav.active svg { fill: #ef4444; stroke: #ef4444 }
-
-    .body { padding: 14px; display:flex; flex-direction:column; gap: 10px; }
-    .price { font-weight:800; font-size: 20px }
-    .address { color:#e7e9f6; font-weight: 600; }
-    .meta { display:flex; gap: 10px; flex-wrap: wrap; color: #cad0e2; }
-    .meta .chip { display:flex; gap:6px; align-items:center; padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); font-weight:600; font-size:12px }
-    .card-footer { padding: 12px 14px 16px; display:flex; align-items:center; justify-content: space-between; }
-
-    /* Modal */
-    .modal { position: fixed; inset: 0; display:none; place-items:center; background: rgba(5,6,10,.7); backdrop-filter: blur(10px); z-index: 100; }
-    .modal.open { display:grid }
-    .modal-card { width: min(920px, 92vw); border-radius: 20px; background: #0f1118; border: 1px solid rgba(255,255,255,.08); box-shadow: var(--shadow-lg); overflow:hidden }
-    .modal-media { position:relative; height: 360px; background: #171926; }
-    .modal-media .slide { position:absolute; inset:0; opacity:0; transition: opacity .4s ease; background: radial-gradient(1000px 350px at 20% 20%, rgba(124,58,237,.35), transparent 60%), radial-gradient(800px 350px at 80% 30%, rgba(34,211,238,.3), transparent 55%), linear-gradient(180deg, #191a23, #0f1118); }
-    .modal-media .slide.active { opacity:1 }
-    .modal-controls { position:absolute; inset:0; display:flex; align-items:center; justify-content: space-between; padding: 0 8px }
-    .modal-controls button { width:44px; height:44px; border-radius: 12px; border:1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35); color:white; cursor:pointer }
-    .modal-body { padding: 16px; display:grid; grid-template-columns: 1.3fr .7fr; gap: 16px }
-    @media (max-width: 820px){ .modal-body{ grid-template-columns: 1fr; } }
-    .modal-section { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 16px; padding: 14px }
-    .modal-section h3 { margin: 0 0 8px }
-    .close-x { position:absolute; right:12px; top:12px; width:40px; height:40px; border-radius: 12px; border:1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35); color:white; cursor:pointer; display:grid; place-items:center }
-
-    /* Footer */
-    footer { border-top: 1px solid rgba(255,255,255,.08); padding: 26px 0; color:#b7bfd6 }
-
-    /* Range input */
-    input[type=range] { -webkit-appearance: none; appearance: none; width: 180px; height: 4px; background: rgba(255,255,255,.14); border-radius: 6px; outline: none }
-    input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:50%; background: radial-gradient(circle at 30% 30%, white, #9aa1b3); box-shadow: var(--ring); cursor:pointer }
-    .range-wrap { display:flex; align-items:center; gap:8px }
-
-    /* Toast */
-    .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 22px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); box-shadow: var(--shadow-md); border-radius: 14px; padding: 10px 14px; display:none; z-index:200 }
-    .toast.show { display:block }
-
-    .hidden { display:none }
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+    .card .details {
+      padding: 15px;
+    }
+    .card h3 {
+      margin: 0 0 10px;
+      color: #333;
+    }
+    .card p {
+      margin: 5px 0;
+      color: #666;
+    }
+    footer {
+      background: #2c3e50;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
-  <!-- NAVBAR -->
-  <nav class="nav">
-    <div class="container nav-inner">
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div>
-          <div style="font-weight:800">Haven</div>
-          <div class="muted" style="font-size:12px; margin-top:-2px">Find your next home</div>
-        </div>
-      </div>
 
-      <div class="nav-search">
-        <label class="field">
-          <span class="icon">🔎</span>
-          <input id="q" type="search" placeholder="Search city, neighborhood, or ID…" />
-        </label>
-        <label class="field" style="max-width:190px">
-          <select id="type">
-            <option value="">Property Type</option>
-            <option>Apartment</option>
-            <option>House</option>
-            <option>Townhouse</option>
-            <option>Condo</option>
-          </select>
-        </label>
-        <label class="field" style="max-width:160px">
-          <select id="beds">
-            <option value="">Bedrooms</option>
-            <option value="1">1+</option>
-            <option value="2">2+</option>
-            <option value="3">3+</option>
-            <option value="4">4+</option>
-          </select>
-        </label>
-        <div class="range-wrap" title="Max Price">
-          <span class="muted" style="font-size:12px">Max ₦</span>
-          <input id="priceRange" type="range" min="100" max="2000" value="2000" step="50"/>
-          <span id="priceOut" class="pill">2,000m</span>
-        </div>
-      </div>
-
-      <div class="nav-actions">
-        <label style="display:flex; align-items:center; gap:10px" title="Sort">
-          <span class="muted" style="font-size:12px">Sort</span>
-          <select id="sort" class="pill">
-            <option value="new">Newest</option>
-            <option value="low">Price: Low → High</option>
-            <option value="high">Price: High → Low</option>
-          </select>
-        </label>
-        <button class="btn secondary" id="toggleTheme" title="Toggle dark / light">🌓</button>
-        <button class="btn" id="addListing">+ Add Listing</button>
-      </div>
-    </div>
-  </nav>
-
-  <!-- HERO -->
-  <header class="hero container">
-    <h1>Live where comfort meets <span style="background: linear-gradient(90deg, var(--brand), var(--brand-2)); -webkit-background-clip:text; background-clip:text; color:transparent">character</span>.</h1>
-    <p>Curated homes with stunning visuals, powerful search, and delightful details—built in a single HTML file.</p>
-    <div class="filters" aria-label="Quick filters">
-      <span class="tag">✅ Verified</span>
-      <span class="tag">🚘 Parking</span>
-      <span class="tag">🌿 Garden</span>
-      <span class="tag">🏊 Pool</span>
-      <span class="tag">🐾 Pet-Friendly</span>
-    </div>
+  <header>
+    <h1>House Listings</h1>
+    <p>Find your dream home today</p>
   </header>
 
-  <!-- LISTINGS -->
-  <main class="container">
-    <section id="grid" class="listings" aria-live="polite"></section>
-    <div style="display:flex; justify-content:center; gap:10px; margin: 8px 0 36px">
-      <button id="loadMore" class="btn secondary">Load more</button>
-      <button id="clearFilters" class="btn ghost">Reset filters</button>
-    </div>
-  </main>
-
-  <!-- DETAILS MODAL -->
-  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-card">
-      <button class="close-x" id="closeModal" aria-label="Close">✕</button>
-      <div class="modal-media" id="modalSlides">
-        <div class="modal-controls">
-          <button id="prevSlide" aria-label="Previous">◀</button>
-          <button id="nextSlide" aria-label="Next">▶</button>
-        </div>
+  <div class="container">
+    <div class="card">
+      <img src="https://via.placeholder.com/400x200" alt="House 1">
+      <div class="details">
+        <h3>Modern 3-Bedroom House</h3>
+        <p>Location: Lagos</p>
+        <p>Price: $150,000</p>
       </div>
-      <div class="modal-body">
-        <div class="modal-section">
-          <h3 id="modalTitle">—</h3>
-          <div id="modalAddress" class="muted" style="margin-bottom:10px">—</div>
-          <div id="modalMeta" class="meta" style="margin-bottom:10px"></div>
-          <p id="modalDesc" style="line-height:1.7">—</p>
-        </div>
-        <div class="modal-section">
-          <h3>Contact Agent</h3>
-          <form id="contactForm" class="grid" style="gap:10px">
-            <input required placeholder="Full name" style="height:42px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color:var(--text); padding:0 12px" />
-            <input type="email" required placeholder="Email" style="height:42px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color:var(--text); padding:0 12px" />
-            <input required placeholder="Phone" style="height:42px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color:var(--text); padding:0 12px" />
-            <textarea rows="4" placeholder="Message" style="resize:vertical; border-radius:10px; border:1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color:var(--text); padding:10px 12px">Hi, I’d love to schedule a tour. Are there any upcoming viewing slots?</textarea>
-            <button class="btn" type="submit">Send message</button>
-          </form>
-        </div>
+    </div>
+
+    <div class="card">
+      <img src="https://via.placeholder.com/400x200" alt="House 2">
+      <div class="details">
+        <h3>Luxury Villa</h3>
+        <p>Location: Abuja</p>
+        <p>Price: $450,000</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://via.placeholder.com/400x200" alt="House 3">
+      <div class="details">
+        <h3>Cozy Apartment</h3>
+        <p>Location: Port Harcourt</p>
+        <p>Price: $80,000</p>
       </div>
     </div>
   </div>
 
-  <div id="toast" class="toast">Saved to favorites</div>
-
   <footer>
-    <div class="container flex" style="justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap">
-      <div>© <span id="year"></span> Haven. Crafted for demo purposes.</div>
-      <div class="muted">Keyboard: <kbd>/</kbd> to focus search • <kbd>Esc</kbd> to close modals</div>
-    </div>
+    <p>&copy; 2025 House Listings. All rights reserved.</p>
   </footer>
 
-  <script>
-    // --- Demo dataset -------------------------------------------------------
-    const listingsSeed = [
-      {
-        id: 'HVN-001',
-        title: 'Sun-drenched Modern Apartment',
-        type: 'Apartment',
-        price: 380, // in millions (₦)
-        beds: 2,
-        baths: 2,
-        area: 110,
-        city: 'Lekki',
-        address: 'Admiralty Way, Lekki Phase 1, Lagos',
-        tags: ['Verified', 'Parking', 'Pet-Friendly'],
-        slides: 4,
-        description: 'Expansive glass, open-plan living, and a balcony that floats above the city. Custom kitchen, rainfall showers, and 24/7 power.'
-      },
-      {
-        id: 'HVN-002',
-        title: 'Coastal Family House with Garden',
-        type: 'House',
-        price: 560,
-        beds: 4,
-        baths: 4,
-        area: 260,
-        city: 'Victoria Island',
-        address: 'Ahmadu Bello Way, Victoria Island, Lagos',
-        tags: ['Verified', 'Garden', 'Parking'],
-        slides: 5,
-        description: 'A tranquil oasis minutes from the ocean. Lush garden, airy bedrooms, private study, and chef-grade appliances.'
-      },
-      {
-        id: 'HVN-003',
-        title: 'Skyline View Condo',
-        type: 'Condo',
-        price: 220,
-        beds: 1,
-        baths: 1,
-        area: 78,
-        city: 'Yaba',
-        address: 'Herbert Macaulay Way, Yaba, Lagos',
-        tags: ['Verified', 'Pool'],
-        slides: 3,
-        description: 'Minimalist finishes, smart lighting, and a sunset-ready terrace. Building includes gym and rooftop pool.'
-      },
-      {
-        id: 'HVN-004',
-        title: 'Townhouse on a Quiet Crescent',
-        type: 'Townhouse',
-        price: 310,
-        beds: 3,
-        baths: 3,
-        area: 160,
-        city: 'Ikeja',
-        address: 'Isaac John St, GRA Ikeja, Lagos',
-        tags: ['Verified', 'Parking', 'Garden'],
-        slides: 4,
-        description: 'Warm textures, skylit stairwell, and a courtyard that bathes the living room in light.'
-      },
-      {
-        id: 'HVN-005',
-        title: 'Penthouse with Private Pool',
-        type: 'Apartment',
-        price: 1250,
-        beds: 5,
-        baths: 6,
-        area: 520,
-        city: 'Banana Island',
-        address: 'Milverton Rd, Ikoyi, Lagos',
-        tags: ['Verified', 'Pool', 'Parking'],
-        slides: 6,
-        description: 'A rare statement home. Two-storey living, panoramic views, private elevator, and an infinity-edge plunge pool.'
-      },
-      {
-        id: 'HVN-006',
-        title: 'Compact Designer Studio',
-        type: 'Apartment',
-        price: 140,
-        beds: 0,
-        baths: 1,
-        area: 44,
-        city: 'Surulere',
-        address: 'Bode Thomas St, Surulere, Lagos',
-        tags: ['Verified'],
-        slides: 3,
-        description: 'Thoughtful storage, matte finishes, and hotel-style bathroom in a perfectly proportioned studio.'
-      },
-      {
-        id: 'HVN-007',
-        title: 'Lakefront Contemporary Home',
-        type: 'House',
-        price: 780,
-        beds: 4,
-        baths: 5,
-        area: 340,
-        city: 'Lekki',
-        address: 'Chevron Drive, Lekki, Lagos',
-        tags: ['Verified', 'Parking', 'Garden', 'Pool'],
-        slides: 5,
-        description: 'Glass walls open to a deck hovering over the water. Primary suite with reading loft, spa-like bath.'
-      },
-      {
-        id: 'HVN-008',
-        title: 'Industrial-Chic Loft',
-        type: 'Condo',
-        price: 270,
-        beds: 1,
-        baths: 2,
-        area: 96,
-        city: 'Ilupeju',
-        address: 'Town Planning Way, Ilupeju, Lagos',
-        tags: ['Verified', 'Parking'],
-        slides: 4,
-        description: 'Double-height living, exposed concrete, and a floating steel staircase. Perfect for creatives.'
-      },
-      {
-        id: 'HVN-009',
-        title: 'Courtyard Townhome',
-        type: 'Townhouse',
-        price: 330,
-        beds: 3,
-        baths: 3,
-        area: 150,
-        city: 'Ajah',
-        address: 'Abraham Adesanya, Ajah, Lagos',
-        tags: ['Verified', 'Pet-Friendly', 'Parking'],
-        slides: 4,
-        description: 'All rooms ensuite, inner-court greenery, and a kitchen made for brunches with friends.'
-      },
-    ];
-
-    // --- Utilities ----------------------------------------------------------
-    const $ = (q, el=document) => el.querySelector(q);
-    const $$ = (q, el=document) => Array.from(el.querySelectorAll(q));
-    const fmt = n => n.toLocaleString('en-NG');
-
-    // --- State --------------------------------------------------------------
-    let state = {
-      q: '', type: '', beds: '', max: 2000, sort: 'new', page: 1, favorites: new Set(JSON.parse(localStorage.getItem('fav')||'[]'))
-    };
-
-    // --- Elements -----------------------------------------------------------
-    const grid = $('#grid');
-    const qEl = $('#q');
-    const typeEl = $('#type');
-    const bedsEl = $('#beds');
-    const priceEl = $('#priceRange');
-    const priceOut = $('#priceOut');
-    const sortEl = $('#sort');
-    const loadMoreBtn = $('#loadMore');
-    const clearBtn = $('#clearFilters');
-    const toast = $('#toast');
-
-    // --- Theme toggle -------------------------------------------------------
-    const toggleTheme = $('#toggleTheme');
-    const THEME_KEY = 'haven-theme';
-    const applyTheme = () => {
-      const t = localStorage.getItem(THEME_KEY) || 'dark';
-      if(t === 'light') {
-        document.documentElement.style.setProperty('--bg', '#f6f7fb');
-        document.documentElement.style.setProperty('--panel', '#ffffff');
-        document.documentElement.style.setProperty('--text', '#0d1020');
-        document.documentElement.style.setProperty('--muted', '#56607a');
-        document.body.style.background = 'radial-gradient(1200px 600px at 10% -10%, rgba(124,58,237,.16), transparent 60%), radial-gradient(900px 500px at 110% 10%, rgba(34,211,238,.12), transparent 50%), linear-gradient(180deg, #eef2ff, #f6f7fb)';
-      } else {
-        document.documentElement.style.setProperty('--bg', '#0b0c10');
-        document.documentElement.style.setProperty('--panel', '#111218');
-        document.documentElement.style.setProperty('--text', '#eef2ff');
-        document.documentElement.style.setProperty('--muted', '#8b91a1');
-        document.body.style.background = 'radial-gradient(1200px 600px at 10% -10%, rgba(124,58,237,.18), transparent 60%), radial-gradient(900px 500px at 110% 10%, rgba(34,211,238,.14), transparent 50%), linear-gradient(180deg, #0a0b12, #0b0c10)';
-      }
-    };
-    applyTheme();
-
-    toggleTheme.addEventListener('click', () => {
-      const cur = localStorage.getItem(THEME_KEY) || 'dark';
-      localStorage.setItem(THEME_KEY, cur === 'dark' ? 'light' : 'dark');
-      applyTheme();
-    });
-
-    // --- Render cards -------------------------------------------------------
-    function cardHTML(item){
-      const isFav = state.favorites.has(item.id);
-      return `
-        <article class="card" data-id="${item.id}">
-          <div class="media">
-            <div class="img" aria-hidden="true"></div>
-            <span class="badge tag">${item.type}</span>
-            <button class="fav ${isFav? 'active':''}" aria-label="Add to favorites" data-fav>
-              <svg viewBox="0 0 24 24"><path d="M12 21s-6.716-4.21-9.173-7.3c-2.05-2.6-.69-6.7 2.6-7.52 1.8-.46 3.64.24 4.57 1.84a4.7 4.7 0 0 1 4.58-1.84c3.29.82 4.65 4.92 2.6 7.52C18.716 16.79 12 21 12 21Z"/></svg>
-            </button>
-          </div>
-          <div class="body">
-            <div class="price">₦${fmt(item.price)}m</div>
-            <div class="address">${item.title} · ${item.city}</div>
-            <div class="muted" style="font-size:13px">${item.address}</div>
-            <div class="meta">
-              <span class="chip">🛏 ${item.beds} bed${item.beds!==1?'s':''}</span>
-              <span class="chip">🛁 ${item.baths} bath${item.baths!==1?'s':''}</span>
-              <span class="chip">📐 ${item.area} m²</span>
-              ${item.tags.slice(0,3).map(t=>`<span class="chip">${t}</span>`).join('')}
-            </div>
-          </div>
-          <div class="card-footer">
-            <button class="btn secondary" data-view>View details</button>
-            <span class="muted">ID ${item.id}</span>
-          </div>
-        </article>
-      `;
-    }
-
-    function applyFilters(data){
-      let out = data.filter(d => d.price <= state.max);
-      if(state.q){
-        const k = state.q.toLowerCase();
-        out = out.filter(d => [d.title, d.city, d.address, d.id].join(' ').toLowerCase().includes(k));
-      }
-      if(state.type) out = out.filter(d => d.type === state.type);
-      if(state.beds) out = out.filter(d => d.beds >= Number(state.beds));
-      if(state.sort === 'low') out.sort((a,b) => a.price - b.price);
-      if(state.sort === 'high') out.sort((a,b) => b.price - a.price);
-      if(state.sort === 'new') out.sort((a,b) => b.id.localeCompare(a.id));
-      return out;
-    }
-
-    function render(){
-      const filtered = applyFilters(listingsSeed);
-      const slice = filtered.slice(0, state.page * 6);
-      grid.innerHTML = slice.map(cardHTML).join('');
-
-      // Fav & modal events
-      $$('[data-fav]', grid).forEach(btn => btn.addEventListener('click', onFav));
-      $$('[data-view]', grid).forEach(btn => btn.addEventListener('click', onOpen));
-
-      loadMoreBtn.style.display = slice.length < filtered.length ? 'inline-flex' : 'none';
-    }
-
-    // --- Favorites ----------------------------------------------------------
-    function onFav(e){
-      const id = e.currentTarget.closest('.card').dataset.id;
-      if(state.favorites.has(id)) state.favorites.delete(id); else state.favorites.add(id);
-      localStorage.setItem('fav', JSON.stringify([...state.favorites]));
-      showToast(state.favorites.has(id) ? 'Saved to favorites' : 'Removed from favorites');
-      render();
-    }
-
-    function showToast(msg){
-      toast.textContent = msg; toast.classList.add('show');
-      setTimeout(()=> toast.classList.remove('show'), 1400);
-    }
-
-    // --- Modal --------------------------------------------------------------
-    const modal = $('#modal');
-    const modalSlides = $('#modalSlides');
-    const modalTitle = $('#modalTitle');
-    const modalAddress = $('#modalAddress');
-    const modalMeta = $('#modalMeta');
-    const modalDesc = $('#modalDesc');
-
-    function onOpen(e){
-      const id = e.currentTarget.closest('.card').dataset.id;
-      const item = listingsSeed.find(x => x.id === id);
-      if(!item) return;
-      modalTitle.textContent = `${item.title} — ₦${fmt(item.price)}m`;
-      modalAddress.textContent = `${item.address}`;
-      modalMeta.innerHTML = `
-        <span class="chip">🛏 ${item.beds} beds</span>
-        <span class="chip">🛁 ${item.baths} baths</span>
-        <span class="chip">📐 ${item.area} m²</span>
-        <span class="chip">🏷 ${item.type}</span>
-      `;
-      modalDesc.textContent = item.description;
-      // slides
-      modalSlides.innerHTML = `
-        <div class="modal-controls">
-          <button id="prevSlide" aria-label="Previous">◀</button>
-          <button id="nextSlide" aria-label="Next">▶</button>
-        </div>
-      `;
-      const slides = [];
-      for(let i=0;i<item.slides;i++){
-        const div = document.createElement('div');
-        div.className = 'slide' + (i===0?' active':'');
-        div.style.background = `radial-gradient(900px 350px at ${20+i*10}% 20%, rgba(124,58,237,.35), transparent 60%), radial-gradient(800px 350px at 80% 30%, rgba(34,211,238,.3), transparent 55%), linear-gradient(180deg, #191a23, #0f1118)`;
-        slides.push(div);
-      }
-      slides.forEach(s => modalSlides.appendChild(s));
-
-      let idx = 0;
-      const prev = () => { idx = (idx - 1 + slides.length) % slides.length; update(); };
-      const next = () => { idx = (idx + 1) % slides.length; update(); };
-      const update = () => slides.forEach((s,i)=> s.classList.toggle('active', i===idx));
-
-      modalSlides.querySelector('#prevSlide').onclick = prev;
-      modalSlides.querySelector('#nextSlide').onclick = next;
-
-      modal.classList.add('open');
-    }
-
-    $('#closeModal').addEventListener('click', ()=> modal.classList.remove('open'));
-    window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') modal.classList.remove('open'); });
-
-    // --- Inputs -------------------------------------------------------------
-    qEl.addEventListener('input', e => { state.q = e.target.value.trim(); state.page = 1; render(); });
-    typeEl.addEventListener('change', e => { state.type = e.target.value; state.page = 1; render(); });
-    bedsEl.addEventListener('change', e => { state.beds = e.target.value; state.page = 1; render(); });
-    sortEl.addEventListener('change', e => { state.sort = e.target.value; render(); });
-    priceEl.addEventListener('input', e => { state.max = Number(e.target.value); priceOut.textContent = fmt(state.max) + 'm'; state.page = 1; render(); });
-
-    loadMoreBtn.addEventListener('click', ()=> { state.page++; render(); });
-
-    clearBtn.addEventListener('click', ()=>{
-      state = { ...state, q:'', type:'', beds:'', max: 2000, sort:'new', page:1 };
-      qEl.value = ''; typeEl.value = ''; bedsEl.value=''; priceEl.value = 2000; priceOut.textContent = '2,000m'; sortEl.value = 'new';
-      render();
-    });
-
-    // Add Listing (demo) -----------------------------------------------------
-    $('#addListing').addEventListener('click', ()=>{
-      const idNum = (100 + listingsSeed.length + 1).toString().slice(-3);
-      const city = ['Lekki','Ikoyi','Yaba','Ikeja','Ajah','VI'][Math.floor(Math.random()*6)];
-      const type = ['Apartment','House','Townhouse','Condo'][Math.floor(Math.random()*4)];
-      const price = Math.floor(120 + Math.random()*1200);
-      listingsSeed.unshift({
-        id: 'HVN-' + idNum,
-        title: 'New Listing — ' + city,
-        type,
-        price,
-        beds: 1 + Math.floor(Math.random()*5),
-        baths: 1 + Math.floor(Math.random()*5),
-        area: 60 + Math.floor(Math.random()*400),
-        city,
-        address: 'Auto-generated Address, ' + city + ', Lagos',
-        tags: ['Verified'],
-        slides: 3 + Math.floor(Math.random()*4),
-        description: 'Fresh on the market. Staged interiors and flexible floor plan. Book a tour to experience it.'
-      });
-      render();
-      showToast('Listing added');
-    });
-
-    // Keyboard shortcuts -----------------------------------------------------
-    window.addEventListener('keydown', (e)=>{
-      if(e.key === '/') { e.preventDefault(); qEl.focus(); }
-    });
-
-    // Footer year
-    $('#year').textContent = new Date().getFullYear();
-
-    // Init
-    priceOut.textContent = fmt(state.max) + 'm';
-    render();
-  </script>
 </body>
 </html>
